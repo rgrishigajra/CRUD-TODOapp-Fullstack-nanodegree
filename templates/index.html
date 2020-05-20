@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <title>ToDo App</title>
+  </head>
+  <body>
+  <form action='/todo/create' method="POST">
+      <input id='input' name="description" type="text"/>
+      <input id="button" name="sumbit" type="submit"/> 
+  </form>
+    <ul>
+      {%for d in data%}
+      <li>
+        {{d.description}}
+      </li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>
