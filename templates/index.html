@@ -2,12 +2,15 @@
   <head>
     <title>ToDo App</title>
     <style>
-        .errorhidden{
-            display: none;
-        }
-        .error{
-            color: red;
-        }
+      .errorhidden {
+        display: none;
+      }
+      .error {
+        color: red;
+      }
+      .ul {
+        list-style: none;
+      }
     </style>
   </head>
   <body>
@@ -19,11 +22,43 @@
     <ul id="list">
       {%for d in data%}
       <li>
+        <input
+          data-id="{{d.id}}"
+          class="check"
+          type="checkbox"
+          {%
+          if
+          d.completed == "true"
+          %}
+          checked
+          {%
+          endif
+          %}
+        />
         {{d.description}}
       </li>
       {% endfor %}
     </ul>
     <script>
+      const checklist = document.querySelectorAll(".check");
+      for (let i = 0; i < checklist.length; i++) {
+        const checkbox = checklist[i];
+        checkbox.onchange = function (e) {
+          console.log("event", e, i);
+          fetch("/todo/" + e.target.dataset["id"].toString() + "/check", {
+            method: "POST",
+            body: JSON.stringify({
+              checked: e.target.checked,
+            }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }).then(function (response) {
+            console.log(response);
+          });
+        };
+      }
+
       document.getElementById("form").onsubmit = function (e) {
         e.preventDefault();
         fetch("/todo/create", {
@@ -43,10 +78,10 @@
             const liItem = document.createElement("li");
             liItem.innerHTML = JSONresponse["description"];
             document.getElementById("list").appendChild(liItem);
-            document.getElementById("error").className="errorhidden"
+            document.getElementById("error").className = "errorhidden";
           })
           .catch(function () {
-            document.getElementById("error").className="error"
+            document.getElementById("error").className = "error";
           });
       };
     </script>

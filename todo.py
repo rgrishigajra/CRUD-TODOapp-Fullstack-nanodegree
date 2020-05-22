@@ -24,27 +24,46 @@ class Todo(db.Model):
 
 @app.route('/')
 def index():
-    return render_template('index.html', data=Todo.query.all())
+    return render_template('index.html', data=Todo.query.order_by("id").all())
 
 
 @app.route('/todo/create', methods=['POST'])
 def create_todo():
-  error = False
-  body = {}
-  try:
-    description = request.get_json()['description']
-    todo = Todo(description=description)
-    db.session.add(todo)
-    db.session.commit()
-    body['description'] = todo.description
-  except:
-    error = True
-    db.session.rollback()
-    print(sys.exc_info())
-  finally:
-    db.session.close()
-  if error:
-    abort (400)
-  else:
-    return jsonify(body)
+    error = False
+    body = {}
+    try:
+        description = request.get_json()['description']
+        todo = Todo(description=description)
+        db.session.add(todo)
+        db.session.commit()
+        body['description'] = todo.description
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if error:
+        abort(400)
+    else:
+        return jsonify(body)
 
+
+@app.route("/todo/<todo_id>/check", methods=['POST'])
+def check_box(todo_id):
+    print(request.get_json()['checked'],todo_id)
+    body = {}
+    try:
+        checked = request.get_json()['checked']
+        checking = Todo.query.get(todo_id)
+        checking.completed = checked
+        print(checking.query.all())
+        db.session.commit()
+        body['checked'] = checked
+        body['id'] = todo_id
+    except:
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    return jsonify(body)
