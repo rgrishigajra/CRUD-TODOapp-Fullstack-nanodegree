@@ -8,43 +8,57 @@
       .error {
         color: red;
       }
-      .ul {
+      ul {
         list-style: none;
+        font-size: 20px;
+      }
+      li {
+        width: 150px;
+      }
+      .delete {
+        float: right;
+        cursor: pointer;
+        color: red;
+      }
+      #category {
+        cursor: pointer;
       }
     </style>
   </head>
   <body>
-    <form id="form">
-      <input id="description" name="description" type="text" />
-      <input id="submit" name="sumbit" type="submit" />
-    </form>
     <div id="error" class="errorhidden">Some error Occured</div>
-    <ul id="list">
-      {%for d in data%}
-      <li>
-        <input
-          data-id="{{d.id}}"
-          class="check"
-          type="checkbox"
-          {%
-          if
-          d.completed == "true"
-          %}
-          checked
-          {%
-          endif
-          %}
-        />
-        {{d.description}}
-      </li>
-      {% endfor %}
-    </ul>
+    <div style="display: flex;">
+      <ul id="category">
+        {%for l in todolists%}
+        <li>
+          <a href="/lists/{{l.id}}">{{l.name}}</a>
+        </li>
+        {% endfor %}
+        <br />
+      </ul>
+      <ul id="list">
+        <h3>{{active_list.name}}</h3>
+        <form id="form">
+          <input id="description" name="description" type="text" required />
+          <input id="submit" name="sumbit" type="submit" />
+        </form>
+        {%for d in todos%}
+        <li>
+          <input data-id="{{d.id}}" class="check" type="checkbox" {% if
+          d.completed == "true" %} checked {% endif %} /> {{d.description}}
+          <span class="delete" data-id="{{d.id}}">&cross;</span>
+        </li>
+        <br />
+        {% endfor %}
+      </ul>
+    </div>
     <script>
+      //looking for checked off list
       const checklist = document.querySelectorAll(".check");
       for (let i = 0; i < checklist.length; i++) {
         const checkbox = checklist[i];
         checkbox.onchange = function (e) {
-          console.log("event", e, i);
+          console.log("checked", e, i);
           fetch("/todo/" + e.target.dataset["id"].toString() + "/check", {
             method: "POST",
             body: JSON.stringify({
@@ -53,12 +67,17 @@
             headers: {
               "Content-Type": "application/json",
             },
-          }).then(function (response) {
-            console.log(response);
-          });
+          })
+            .then(function (response) {
+              console.log(response);
+              document.getElementById("error").className = "errorhidden";
+            })
+            .catch(function () {
+              document.getElementById("error").className = "error";
+            });
         };
       }
-
+      //creating new list item
       document.getElementById("form").onsubmit = function (e) {
         e.preventDefault();
         fetch("/todo/create", {
@@ -70,13 +89,13 @@
             "Content-Type": "application/json",
           },
         })
-          .then(function (response) {
-            return response.json();
-          })
           .then(function (JSONresponse) {
             console.log(JSONresponse);
             const liItem = document.createElement("li");
-            liItem.innerHTML = JSONresponse["description"];
+            const chkbx = document.createElement("input");
+            liItem.innerHTML =
+              "<input type='checkbox' class='check'/>" +
+              JSONresponse["description"];
             document.getElementById("list").appendChild(liItem);
             document.getElementById("error").className = "errorhidden";
           })
@@ -84,6 +103,19 @@
             document.getElementById("error").className = "error";
           });
       };
+      const deletebtn = document.querySelectorAll(".delete");
+      for (i = 0; i < deletebtn.length; i++) {
+        deletebtn[i].onclick = function (e) {
+          console.log("delete", e);
+          fetch("/todo/" + e.target.dataset["id"].toString() + "/delete")
+            .then(function (response) {
+              console.log(response);
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        };
+      }
     </script>
   </body>
 </html>
